@@ -1,0 +1,45 @@
+{ exec } = require 'child_process'
+
+
+BUILD    = "."
+SRC      = "../src/coffee/Deft"
+JS       = "../src/js/Deft"
+JOIN     = "#{BUILD}/js/Deft/deft-ext-all.js"
+LIB      = "#{BUILD}/deft-ext-all.js"
+
+# TODO: Remove - temporarily added until next build of coffee-script is released.
+TOOLS = "/usr/local/bin"
+
+
+# -------------------------------------------------------------
+# Compile Coffeescript to Javascript
+# -------------------------------------------------------------
+
+task "watch", "Compiles Coffescript to JavaScript... no joins or minifications", ->
+
+	#
+	# Build single-file Traverse application engine
+	#
+	console.log "Compiling DeftJS classes"
+	exec "mkdir #{ BUILD }/js"
+	exec "#{ TOOLS }/coffee -o #{ BUILD }/js -wc #{ SRC }", ( error, stdout, stderr ) ->
+		console.log stdout + stderr if stdout or stderr
+		if error
+			throw error
+
+
+task "build", "Compiles Coffescript & Less... no joins or minifications", ->
+
+	console.log "Compiling DeftJS Extension classes"
+	exec "#{ TOOLS }/coffee -o #{ JS }  -c #{ SRC }", ( error, stdout, stderr ) ->
+		console.log stdout + stderr if stdout or stderr
+		if error
+			throw error
+		else
+			exec "#{ TOOLS }/coffee --join #{ LIB } --output #{ JS } --compile #{ SRC }/util #{ SRC }/overrides" , ( error, stdout, stderr ) ->
+				console.log stdout + stderr if stdout or stderr
+				if error
+					throw error
+				else
+					exec "cp  #{ JOIN } #{ LIB }"
+					exec "rm #{ JOIN }"
